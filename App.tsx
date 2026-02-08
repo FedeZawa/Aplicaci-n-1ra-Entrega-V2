@@ -5,40 +5,74 @@ import AdminDashboard from './views/AdminDashboard';
 import StudentDashboard from './views/StudentDashboard';
 import { ToastProvider } from './context/ToastContext';
 
+import { supabase } from './services/supabaseClient';
+
 const AppContent = () => {
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check local storage for persisted session
-    const stored = localStorage.getItem('openperk_user');
-    if (stored) {
-      setUser(JSON.parse(stored));
-    }
+    // 1. Initial Session Check
+    const initAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        await fetchProfile(session.user.id);
+      }
+      setLoading(false);
+    };
+
+    initAuth();
+
+    // 2. Listen for Auth Changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session) {
+        await fetchProfile(session.user.id);
+      } else {
+        setUser(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const handleLogin = (u: User) => {
-    setUser(u);
-    localStorage.setItem('openperk_user', JSON.stringify(u));
+  const fetchProfile = async (userId: string) => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching profile:', error);
+      return;
+    }
+
+    if (data) {
+      setUser(data as User);
+    }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
-    localStorage.removeItem('openperk_user');
   };
 
-  const handleUpdateUser = (updatedUser: User) => {
-    setUser(updatedUser);
-    localStorage.setItem('openperk_user', JSON.stringify(updatedUser));
-  };
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+      </div>
+    );
+  }
 
   if (!user) {
-    return <LoginView onLogin={handleLogin} />;
+    return <LoginView onLogin={(u) => setUser(u)} />;
   }
 
   return user.role === UserRole.ADMIN ? (
     <AdminDashboard user={user} onLogout={handleLogout} />
   ) : (
-    <StudentDashboard user={user} onLogout={handleLogout} onUpdateUser={handleUpdateUser} />
+    <StudentDashboard user={user} onLogout={handleLogout} onUpdateUser={setUser} />
   );
 };
 

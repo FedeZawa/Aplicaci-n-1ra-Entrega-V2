@@ -1,0 +1,11 @@
+{
+    "version": 1,
+    "tools": {
+        "supabase": {
+            "enabled": true,
+            "project_url": "https://ufvllogvhigovxqipzxh.supabase.co",
+            "anon_key": "sb_publishable_H8AdgSTiiD0R7NPmokjvSQ_JbFhshYN",
+            "service_role_key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmdmxsb2d2aGlnb3Z4cWlwenhoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDUwMDQ4MywiZXhwIjoyMDg2MDc2NDgzfQ.rxzxg9ZMHoSTGngwHNmouJb7T-9EgYj9ZkWhEHLIptI"
+        }
+    }
+}
